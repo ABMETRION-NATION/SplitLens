@@ -1,0 +1,144 @@
+{
+  "project_name": "SplitLens",
+  "theme_and_archetype": {
+    "theme": "Dark",
+    "archetype": "Archetype 4 (Swiss & High-Contrast) tailored for Tactical Utility",
+    "description": "A highly functional, precision-focused aesthetic. Uses deep obsidian/matte charcoal backgrounds with a striking 'Safety Yellow' accent. It evokes the feeling of a high-end Braun calculator or professional photography equipment. No generic teal or purple gradients."
+  },
+  "colors": {
+    "background": "#09090B",
+    "surface": "#18181B",
+    "surface_elevated": "#27272A",
+    "primary": "#FFD600",
+    "primary_active": "#E6C200",
+    "text_primary": "#FAFAFA",
+    "text_secondary": "#A1A1AA",
+    "danger": "#EF4444",
+    "border": "#27272A",
+    "border_focus": "#FFD600",
+    "overlay": "rgba(0, 0, 0, 0.7)"
+  },
+  "typography": {
+    "font_families": {
+      "heading": "Outfit",
+      "numbers": "Outfit",
+      "body": "Manrope"
+    },
+    "sizes": {
+      "hero_number": "text-6xl (60px)",
+      "h1": "text-4xl (36px)",
+      "h2": "text-2xl (24px)",
+      "h3": "text-xl (20px)",
+      "body_large": "text-lg (18px)",
+      "body": "text-base (16px)",
+      "small": "text-sm (14px)",
+      "tiny": "text-xs (12px)"
+    },
+    "letter_spacing": {
+      "hero": "-0.04em",
+      "headings": "-0.02em",
+      "labels": "0.1em"
+    },
+    "rules": {
+      "hero_text": "Must use tight letter spacing. Do not use generic sans-serif for the hero amount. The Per-Person amount is the most important element on the screen.",
+      "labels": "Overlines and small labels should be uppercase with wide tracking for tactical readability."
+    }
+  },
+  "spacing_and_layout": {
+    "base_unit": 4,
+    "margins": {
+      "screen_edge": 24,
+      "section_gap": 32,
+      "item_gap": 12
+    },
+    "border_radius": {
+      "small": 8,
+      "button": 12,
+      "sheet": 24,
+      "keypad": 0
+    },
+    "shadows": {
+      "none": "Use 1px solid borders instead of shadows for a flat, tactical look."
+    }
+  },
+  "components": {
+    "hero_display": {
+      "description": "Top section showing the final 'Per Person' split. Massive, high-contrast numbers.",
+      "alignment": "center",
+      "color": "text_primary",
+      "test_id": "hero-per-person-amount"
+    },
+    "bill_input": {
+      "description": "Secondary display just below hero. Shows total bill amount.",
+      "alignment": "center",
+      "color": "text_secondary",
+      "test_id": "bill-total-display"
+    },
+    "keypad": {
+      "description": "Custom numerical keypad filling the lower-mid screen. Grid layout. No background per key, just large precise text, possibly separated by 1px subtle borders (border_collapse style).",
+      "test_ids": {
+        "number_key": "calculator-keypad-btn-{num}",
+        "delete_key": "calculator-keypad-btn-delete"
+      }
+    },
+    "tip_chips": {
+      "description": "Horizontal scrollable list or tight grid of tip percentages (10%, 15%, 18%, 20%, 25%, Custom).",
+      "style": "Surface background, 1px border. Selected state gets Safety Yellow border and text.",
+      "test_ids": {
+        "preset": "tip-chip-{percent}",
+        "custom": "tip-chip-custom"
+      }
+    },
+    "action_buttons": {
+      "description": "CTAs for features like 'Scan Receipt' and 'Add People'. Must be prominent but not outshine the primary data.",
+      "test_ids": {
+        "scan_receipt": "scan-receipt-button",
+        "manage_people": "manage-people-button",
+        "quick_reset": "quick-reset-button"
+      }
+    },
+    "bottom_sheets": {
+      "description": "Used for Receipt Scan and Named People list. Replaces standard modals. Slides up from bottom.",
+      "background": "surface",
+      "handle_color": "border",
+      "test_ids": {
+        "receipt_sheet": "receipt-scanner-sheet",
+        "people_sheet": "named-people-sheet",
+        "add_person_input": "add-person-input-field",
+        "add_person_btn": "add-person-submit"
+      }
+    },
+    "toggles": {
+      "description": "Switches for 'Round up' and 'Split Type (Even vs Named)'.",
+      "active_color": "primary",
+      "test_ids": {
+        "round_toggle": "round-total-toggle",
+        "split_type_toggle": "split-type-toggle"
+      }
+    }
+  },
+  "interactions": {
+    "haptics": "MANDATORY. Every keypad press, chip selection, and person addition must trigger a light haptic feedback.",
+    "animations": "Use react-native-reanimated for layout transitions (e.g., when switching from simple number to named people list).",
+    "sheet_transitions": "Bottom sheets must have a smooth spring animation."
+  },
+  "media": {
+    "icons": "Use @expo/vector-icons (Feather or Ionicons). Do not use emojis.",
+    "images": {
+      "receipt_placeholder": {
+        "url": "https://images.unsplash.com/photo-1766232272162-221a7a3dc874?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODh8MHwxfHNlYXJjaHwxfHxyZXN0YXVyYW50JTIwcmVjZWlwdCUyMGRhcmt8ZW58MHx8fHwxNzc2NDQ4MjEyfDA&ixlib=rb-4.1.0&q=85",
+        "description": "Placeholder for receipt scanning view background or scanning simulation"
+      }
+    }
+  },
+  "instructions_to_main_agent": [
+    "This is a React Native Expo project. Use pure React Native components (View, Text, TouchableOpacity) and StyleSheet for styling, do NOT use HTML tags (div, span).",
+    "The codebase uses .js files, so avoid TypeScript syntax.",
+    "For the custom keypad, use a flat 3x4 grid structure. It must update the state instantly.",
+    "Implement bottom sheets using @gorhom/bottom-sheet or a custom animated View.",
+    "Use expo-haptics to add physical feedback to the calculator.",
+    "Ensure all data-testids are added exactly as specified in the guidelines for QA automation. In React Native, map these to 'testID' props.",
+    "All text colors must explicitly contrast against the dark background. Do not rely on default system text colors.",
+    "Ensure offline-first approach via AsyncStorage for 'last split memory' and 'last group of names'."
+  ]
+}
