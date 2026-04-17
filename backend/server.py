@@ -1,58 +1,81 @@
-from fastapi import FastAPI, APIRouter
-from dotenv import load_dotenv
+"""
+SplitLens backend — minimal FastAPI scaffold.
+
+Intentionally lightweight: the mobile app works fully offline for all core
+features. These endpoints are placeholders so the frontend can later switch
+from inline/simulated logic to a real backend (e.g. real OCR) without any
+client refactor.
+"""
+from fastapi import FastAPI, APIRouter, UploadFile, File
+from fastapi.responses import JSONResponse
 from starlette.middleware.cors import CORSMiddleware
-from motor.motor_asyncio import AsyncIOMotorClient
-import os
+from pydantic import BaseModel
+from typing import Optional
 import logging
-from pathlib import Path
-from pydantic import BaseModel, Field
-from typing import List
-import uuid
-from datetime import datetime
+import random
 
 
-ROOT_DIR = Path(__file__).parent
-load_dotenv(ROOT_DIR / '.env')
-
-# MongoDB connection
-mongo_url = os.environ['MONGO_URL']
-client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ['DB_NAME']]
-
-# Create the main app without a prefix
-app = FastAPI()
-
-# Create a router with the /api prefix
+app = FastAPI(title="SplitLens API", version="0.1.0")
 api_router = APIRouter(prefix="/api")
 
 
-# Define Models
-class StatusCheck(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    client_name: str
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+class HealthResponse(BaseModel):
+    status: str
+    service: str
+    version: str
 
-class StatusCheckCreate(BaseModel):
-    client_name: str
 
-# Add your routes to the router instead of directly to app
-@api_router.get("/")
-async def root():
-    return {"message": "Hello World"}
+class ReceiptScanResponse(BaseModel):
+    ok: bool
+    total: Optional[float] = None
+    currency: str = "USD"
+    source: str  # "simulated" | "ocr"
+    message: str
 
-@api_router.post("/status", response_model=StatusCheck)
-async def create_status_check(input: StatusCheckCreate):
-    status_dict = input.dict()
-    status_obj = StatusCheck(**status_dict)
-    _ = await db.status_checks.insert_one(status_obj.dict())
-    return status_obj
 
-@api_router.get("/status", response_model=List[StatusCheck])
-async def get_status_checks():
-    status_checks = await db.status_checks.find().to_list(1000)
-    return [StatusCheck(**status_check) for status_check in status_checks]
+@api_router.get("/", response_model=HealthResponse)
+async def root() -> HealthResponse:
+    return HealthResponse(status="ok", service="splitlens", version="0.1.0")
 
-# Include the router in the main app
+
+@api_router.get("/health", response_model=HealthResponse)
+async def health() -> HealthResponse:
+    return HealthResponse(status="ok", service="splitlens", version="0.1.0")
+
+
+@api_router.post("/receipt/scan", response_model=ReceiptScanResponse)
+async def scan_receipt(file: UploadFile = File(...)) -> ReceiptScanResponse:
+    """
+    Placeholder receipt scan endpoint.
+
+    Accepts an uploaded receipt image and returns a *simulated* total so the
+    frontend flow is fully wired. Swap the body of this function with a real
+    OCR provider (GPT-4o vision, Google Vision, Textract, etc.) later — the
+    response contract stays the same.
+    """
+    try:
+        contents = await file.read()
+        size_kb = len(contents) / 1024.0
+        # Deterministic-but-realistic simulated amount so it feels real.
+        random.seed(int(size_kb * 100) or 7)
+        total = round(random.uniform(18, 187), 2)
+        return ReceiptScanResponse(
+            ok=True,
+            total=total,
+            currency="USD",
+            source="simulated",
+            message=f"Simulated total extracted from {size_kb:.1f} KB image.",
+        )
+    except Exception as exc:  # pragma: no cover - defensive for placeholder
+        logging.exception("receipt scan failed")
+        return ReceiptScanResponse(
+            ok=False,
+            total=None,
+            source="simulated",
+            message=f"Scan failed: {exc}. Fall back to manual entry.",
+        )
+
+
 app.include_router(api_router)
 
 app.add_middleware(
@@ -63,13 +86,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
-logger = logging.getLogger(__name__)
 
-@app.on_event("shutdown")
-async def shutdown_db_client():
-    client.close()
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(_request, exc):  # pragma: no cover
+    logging.exception("unhandled exception")
+    return JSONResponse(
+        status_code=500,
+        content={"ok": False, "message": f"Internal error: {exc}"},
+    )
